@@ -1,10 +1,84 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.galeng.backend.repository.UserRepository">
-    <select id="selectPasswordByAccount" resultType="java.lang.String" parameterType="java.lang.String">
-        select password from users where account=#{account}
+    <select id="selectPassword" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT password FROM users WHERE account=#{account}
     </select>
-    <select id="selectCgByAccount" resultType="com.galeng.backend.entity.Cg" parameterType="java.lang.String">
-        select * from cg where Account=#{Account} and Gameid=#{gameid} order by Cgpage,Cgid
+    <select id="selectCg" resultType="com.galeng.backend.entity.Cg" resultMap="CgMap">
+        SELECT * FROM cg WHERE account=#{account} AND game_id=#{gameId} ORDER BY cg_page,cg_id
     </select>
+    <insert id="saveSnapshootSave" parameterType="com.galeng.backend.entity.SnapshootSave">
+        INSERT INTO snapshoot_save(game_id,account,save_id,image,save_text,save_page,have_data) VALUES (#{gameId},#{account},#{saveId},#{image},#{saveText},#{savePage},#{haveData})
+    </insert>
+    <select id="selectSnapshootSave" resultType="com.galeng.backend.entity.SnapshootSave">
+        SELECT * FROM snapshoot_save WHERE account=#{account} AND game_id=#{gameId}
+    </select>
+    <update id="updateSnapshootSave" parameterType="com.galeng.backend.entity.SnapshootSave">
+        UPDATE snapshoot_save SET image=#{image},save_text=#{saveText} WHERE account=#{account} AND game_id=#{gameId} AND save_id=#{saveId} AND save_page=#{savePage}
+    </update>
+    <insert id="saveRuntimeSave" parameterType="com.galeng.backend.entity.RuntimeSave">
+    INSERT INTO runtime_save(pc,likability1,likability2,likability3,story_bgm_url,story_dialog_url,story_se_url,story_text,story_mode,select_mode,save_page,save_id,account,game_id,story_voice_url,story_bg_url,story_bg_animation_name,story_bg_animation_duration,story_bg_animation_delay,story_bg_shake_up) VALUES
+    (#{pc},#{likAbility1},#{likAbility2},#{likAbility3},#{storyBgmUrl},#{storyDialogUrl},#{storySeUrl},#{storyText},#{storyMode},#{selectMode},#{savePage},#{saveId},#{account},#{gameId},#{storyVoiceUrl},#{storyBgUrl},#{storyBgAnimationName},#{storyBgAnimationDuration},#{storyBgAnimationDelay},#{storyBgShakeUp})
+    </insert>
+    <update id="updateRuntimeSave"  parameterType="com.galeng.backend.entity.RuntimeSave">
+    UPDATE runtime_save SET story_voice_url=#{storyVoiceUrl},pc=#{pc},likability1=#{likAbility1},likability2=#{likAbility2},likability3=#{likAbility3},story_bgm_url=#{storyBgmUrl},story_dialog_url=#{storyDialogUrl},story_se_url=#{storySeUrl},story_text=#{storyText},story_mode=#{storyMode},select_mode=#{selectMode},story_bg_url=#{storyBgUrl},story_bg_animation_name=#{storyBgAnimationName},story_bg_animation_duration=#{storyBgAnimationDuration},story_bg_animation_delay=#{storyBgAnimationDelay},story_bg_shake_up=#{storyBgShakeUp}
+    WHERE save_page=#{savePage} AND save_id=#{saveId} AND account=#{account} AND game_id=#{gameId}
+    </update>
+    <select id="selectRuntimeData" resultMap="RuntimeSaveMap" resultType="com.galeng.backend.entity.RuntimeSave">
+        SELECT * FROM runtime_save WHERE save_page=#{savePage} AND save_id=#{saveId} AND account=#{account} AND game_id=#{gameId}
+    </select>
+    <insert id="saveLihuiSave" parameterType="com.galeng.backend.entity.Lihui">
+        INSERT INTO lihui_save(save_page,save_id,lihui_id,lihui_src,animation_name,animation_duration,animation_delay,jump_up,right_move,left_move,account,game_id) VALUES (
+        #{savePage},#{saveId},#{lihuiId},#{lihuiSrc},#{animationName},#{animationDuration},#{animationDelay},#{jumpUp},#{rightMove},#{leftMove},#{account},#{gameId}
+        )
+    </insert>
+    <update id="updateLihuiSave" parameterType="com.galeng.backend.entity.Lihui">
+        UPDATE lihui_save set save_page=#{savePage},save_id=#{saveId},lihui_src=#{lihuiSrc},animation_name=#{animationName},animation_duration=#{animationDuration},animation_delay=#{animationDelay},jump_up=#{jumpUp},right_move=#{rightMove},left_move=#{leftMove}
+        WHERE account=#{account} AND game_id=#{gameId} AND save_page=#{savePage} AND save_id=#{saveId} AND lihui_id=#{lihuiId}
+    </update>
+    <select id="selectLihuiSave" resultMap="LihuiSaveMap" parameterType="com.galeng.backend.entity.Lihui" >
+        SELECT * FROM lihui_save WHERE save_page=#{savePage} AND save_id=#{saveId} AND account=#{account} AND game_id=#{gameId}
+    </select>
+    <resultMap id="LihuiSaveMap" type="com.galeng.backend.entity.Lihui">
+        <id property="saveId" column="save_id"/>
+        <id property="savePage" column="save_page"/>
+        <id property="gameId" column="game_id"/>
+        <id property="lihuiId" column="lihui_id"/>
+        <result property="lihuiSrc" column="lihui_src"/>
+        <result property="animationName" column="animation_name"/>
+        <result property="animationDuration" column="animation_duration"/>
+        <result property="animationDelay" column="animation_delay"/>
+        <result property="jumpUp" column="jump_up"/>
+        <result property="rightMove" column="right_move"/>
+        <result property="leftMove" column="left_move"/>
+    </resultMap>
+    <resultMap id="RuntimeSaveMap" type="com.galeng.backend.entity.RuntimeSave">
+        <!--        id映射主键-->
+        <id property="saveId" column="save_id"/>
+        <id property="savePage" column="save_page"/>
+        <id property="gameId" column="game_id"/>
+        <!--        result映射非主键-->
+        <result property="storyBgmUrl" column="story_bgm_url"/>
+        <result property="storySeUrl" column="story_se_url"/>
+        <result property="storyDialogUrl" column="story_dialog_url"/>
+        <result property="storyText" column="story_text"/>
+        <result property="storyMode" column="story_mode"/>
+        <result property="selectMode" column="select_mode"/>
+        <result property="storyVoiceUrl" column="story_voice_url"/>
+        <result property="storyBgUrl" column="story_bg_url"/>
+        <result property="storyBgAnimationName" column="story_bg_animation_name"/>
+        <result property="storyBgAnimationDuration" column="story_bg_animation_duration"/>
+        <result property="storyBgAnimationDelay" column="story_bg_animation_delay"/>
+        <result property="storyBgShakeUp" column="story_bg_shake_up"/>
+    </resultMap>
+    <resultMap id="CgMap" type="com.galeng.backend.entity.Cg">
+        <id property="gameId" column="game_id"/>
+        <result property="cgId" column="cg_id"/>
+        <result property="cgPage" column="cg_page"/>
+        <result property="cgNum" column="cg_num"/>
+        <result property="haveData" column="have_data"/>
+        <result property="littleCg" column="little_cg"/>
+        <result property="cgList" column="cg_list"/>
+    </resultMap>
+
 </mapper>

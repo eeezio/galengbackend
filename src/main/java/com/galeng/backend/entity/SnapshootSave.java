@@ -2,15 +2,13 @@ package com.galeng.backend.entity;
 
 import lombok.Data;
 
-
 @Data
-public class Cg {
+public class SnapshootSave {
     String gameId;
     String account;
-    int cgId;
-    int cgNum;
-    int cgPage;
+    int saveId;
+    String image;
+    String saveText;
+    int savePage;
     boolean haveData;
-    String littleCg;
-    String cgList;
 }
