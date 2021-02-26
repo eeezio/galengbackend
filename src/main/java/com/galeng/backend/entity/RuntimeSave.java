@@ -24,4 +24,8 @@ public class RuntimeSave {
     String storyBgAnimationDuration;
     String storyBgAnimationDelay;
     String storyBgShakeUp;
+    String storyMaskUrl;
+    String storyMaskAnimationName;
+    String storyMaskAnimationDuration;
+    String storyMaskAnimationDelay;
 }
