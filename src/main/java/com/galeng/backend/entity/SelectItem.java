@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class SelectItem {
-    int selectId;
-    String likabilityId;
+    String text;
+    String varName;
     int improveNum;
 }

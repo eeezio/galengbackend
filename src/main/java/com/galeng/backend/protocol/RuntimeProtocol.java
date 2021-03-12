@@ -64,8 +64,8 @@ public class RuntimeProtocol implements Protocol {
 
     public void updateSelectList(StringBuffer... args) {
         SelectItem temp = selectList.get(selectList.size() - 1);
-        temp.setSelectId(Integer.parseInt(args[0].toString()));
-        temp.setLikabilityId(args[1].toString());
+        temp.setText(args[0].toString());
+        temp.setVarName(args[1].toString());
         temp.setImproveNum(Integer.parseInt(args[2].toString()));
     }
 }

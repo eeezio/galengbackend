@@ -18,6 +18,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -29,11 +30,45 @@ public class testController {
     @Autowired
     private Decoder decoder;
 
-    private LRUCache<String, String> audioCache = new LRUCache<>(50);
 
     private LRUCache<String, BufferedImage> imageLRUCache = new LRUCache<>(50);
 
     private LRUCache<String, RuntimeSave> runtimeSaveLRUCache = new LRUCache<>(10000);
+
+    private ArrayList<String> instructQue = new ArrayList<>();
+
+    testController() {
+        File file = new File("/Users/zhewang/Desktop/galeng/script.txt");
+        BufferedReader reader = null;
+        StringBuffer scriptBuffer = new StringBuffer();
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            String tmpScript;
+            while ((tmpScript = reader.readLine()) != null) {
+                scriptBuffer.append(tmpScript);
+            }
+            reader.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            int iter = 0;
+            String script = scriptBuffer.toString();
+            scriptBuffer.delete(0, scriptBuffer.length());
+            while (iter < script.length()) {
+                if (script.substring(iter, iter + 5).equals("<end>")) {
+                    instructQue.add(scriptBuffer.toString());
+                    System.out.println(instructQue.get(instructQue.size() - 1));
+                    scriptBuffer.delete(0, scriptBuffer.length());
+                    iter += 4;
+                } else {
+                    scriptBuffer.append(script.charAt(iter));
+                }
+                iter += 1;
+            }
+        }
+    }
 
     @GetMapping("/selectPassword/{account}")//RESTFUL风格
     //PathVariable的作用是实现"account"与后面真正参数的绑定
@@ -63,11 +98,13 @@ public class testController {
     }
 
     @GetMapping("/selectRuntimeSave/{account}/{gameId}/{savePage}/{saveId}")
-    public RuntimeSave selectRuntimeSave(@PathVariable("account") String account, @PathVariable("gameId") String gameId, @PathVariable("savePage") int savePage, @PathVariable("saveId") int saveId) {
+    public RuntimeSave selectRuntimeSave(@PathVariable("account") String account, @PathVariable("gameId") String gameId, @PathVariable("savePage") int savePage, @PathVariable("saveId") int saveId, HttpServletRequest request) {
         if (decoder.getRuntimeSaveLRUCache() == null) {
             decoder.setRuntimeSaveLRUCache(runtimeSaveLRUCache);
         }
-        return UserRepository.selectRuntimeData(account, gameId, savePage, saveId);
+        RuntimeSave ans = UserRepository.selectRuntimeData(account, gameId, savePage, saveId);
+        decoder.getRuntimeSaveLRUCache().put(request.getSession().getId(), ans);
+        return ans;
     }
 
     @PostMapping("/saveRuntimeSave")
@@ -115,10 +152,13 @@ public class testController {
     }
 
     @GetMapping("/getNextInstruct/{pc}")
-    public RuntimeProtocol getNextInstruct(@PathVariable("pc") int pc) throws NoSuchMethodException {
-        decoder.setScript("<text> backendtext:你好。\n欢迎λ;重修 大学计算机;voiceurl:zhewang/home/test.mp3");
+    public RuntimeProtocol getNextInstruct(@PathVariable("pc") int pc, HttpServletRequest request) {
+        if (decoder.getInstructQue() == null) {
+            decoder.setInstructQue(instructQue);
+            System.out.println("setQue");
+        }
         try {
-            return decoder.decode(pc, null);
+            return decoder.decode(pc, null, request);
         } catch (NoSuchMethodException noSuchMethodException) {
             System.out.printf("NoSuchMethodException");
         } catch (IllegalAccessException e) {
@@ -159,30 +199,23 @@ public class testController {
     @RequestMapping(value = "/getAudio", params = {"audioName"})
     public void getAudio(@RequestParam("audioName") String audioName, HttpServletResponse response) throws IOException {
         OutputStream out = response.getOutputStream();
-        if (audioCache.map.containsKey(audioName)) {
-            byte[] b = audioCache.get(audioName).getBytes();
-            out.write(b, 0, b.length);
-            out.flush();
-            out.close();
-        } else {
-            File file = new File(audioName);
-            FileInputStream in = new FileInputStream(file);
-            byte[] b = null;
-            while (in.available() > 0) {
-                if (in.available() > 10240) {
-                    b = new byte[10240];
-                } else {
-                    b = new byte[in.available()];
-                }
-                in.read(b, 0, b.length);
-                out.write(b, 0, b.length);
+        File file = new File(audioName);
+        FileInputStream in = new FileInputStream(file);
+        byte[] b = new byte[in.available()];
+        while (in.available() > 0) {
+            if (in.available() > 10240) {
+                b = new byte[10240];
+            } else {
+                b = new byte[in.available()];
             }
-            audioCache.put(audioName, b.toString());
-            in.close();
-            //清空缓冲区
-            out.flush();
-            out.close();
+            in.read(b, 0, b.length);
+            out.write(b, 0, b.length);
         }
+        in.close();
+        //清空缓冲区
+        out.flush();
+        out.close();
     }
-
 }
+
+
